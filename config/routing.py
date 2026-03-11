@@ -1,5 +1,5 @@
-from django.urls import path
+from apps.rooms.routing import websocket_urlpatterns as room_websocket_urlpatterns
 
 websocket_urlpatterns = [
-    # Phase 4 will add real WebSocket routes here.
+    *room_websocket_urlpatterns,
 ]

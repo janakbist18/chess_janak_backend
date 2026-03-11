@@ -1,4 +1,3 @@
-from django.shortcuts import get_object_or_404
 from rest_framework import permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -93,7 +92,7 @@ class MyRoomsView(APIView):
         serializer = GameRoomSerializer(rooms, many=True, context={"request": request})
         return Response(
             {
-                "count": len(serializer.data),
+                "count": rooms.count(),
                 "rooms": serializer.data,
             },
             status=status.HTTP_200_OK,

@@ -2,6 +2,7 @@ import uuid
 
 from django.conf import settings
 from django.db import models
+from django.utils import timezone
 
 from apps.core.models import TimeStampedModel
 
@@ -160,6 +161,7 @@ class RoomParticipant(TimeStampedModel):
     is_ready = models.BooleanField(default=False)
     joined_at = models.DateTimeField(auto_now_add=True)
     left_at = models.DateTimeField(null=True, blank=True)
+    last_ping_at = models.DateTimeField(null=True, blank=True)
 
     class Meta:
         ordering = ["joined_at"]
@@ -167,3 +169,22 @@ class RoomParticipant(TimeStampedModel):
 
     def __str__(self) -> str:
         return f"{self.room.room_code} - {self.user.username} - {self.side}"
+
+    def mark_joined(self):
+        self.presence_status = self.PRESENCE_JOINED
+        self.left_at = None
+        self.last_ping_at = timezone.now()
+        self.save(update_fields=["presence_status", "left_at", "last_ping_at", "updated_at"])
+
+    def mark_left(self):
+        self.presence_status = self.PRESENCE_LEFT
+        self.left_at = timezone.now()
+        self.save(update_fields=["presence_status", "left_at", "updated_at"])
+
+    def mark_ping(self):
+        self.last_ping_at = timezone.now()
+        if self.presence_status != self.PRESENCE_JOINED:
+            self.presence_status = self.PRESENCE_JOINED
+            self.save(update_fields=["last_ping_at", "presence_status", "updated_at"])
+        else:
+            self.save(update_fields=["last_ping_at", "updated_at"])

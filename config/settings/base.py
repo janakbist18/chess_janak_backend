@@ -8,7 +8,6 @@ BASE_DIR = Path(__file__).resolve().parent.parent.parent
 SECRET_KEY = config("SECRET_KEY", default="django-insecure-change-this")
 DEBUG = config("DEBUG", default=False, cast=bool)
 ALLOWED_HOSTS = config("ALLOWED_HOSTS", default="127.0.0.1,localhost", cast=Csv())
-
 INSTALLED_APPS = [
     "daphne",
     "django.contrib.admin",
@@ -25,6 +24,8 @@ INSTALLED_APPS = [
     "channels",
     "apps.core",
     "apps.accounts",
+    "apps.rooms",
+    "apps.chessplay",
 ]
 
 MIDDLEWARE = [
@@ -181,3 +182,17 @@ LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,
 }
+
+GOOGLE_WEB_CLIENT_ID = config("GOOGLE_WEB_CLIENT_ID", default="")
+GOOGLE_ANDROID_CLIENT_ID = config("GOOGLE_ANDROID_CLIENT_ID", default="")
+GOOGLE_IOS_CLIENT_ID = config("GOOGLE_IOS_CLIENT_ID", default="")
+
+APP_BASE_URL = config("APP_BASE_URL", default="http://127.0.0.1:8000")
+
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels.layers.InMemoryChannelLayer",
+    }
+}
+
+APP_BASE_URL = config("APP_BASE_URL", default="http://127.0.0.1:8000")

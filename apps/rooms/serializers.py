@@ -19,6 +19,7 @@ class RoomParticipantSerializer(serializers.ModelSerializer):
             "is_ready",
             "joined_at",
             "left_at",
+            "last_ping_at",
         )
 
 
