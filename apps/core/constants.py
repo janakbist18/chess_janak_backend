@@ -1,0 +1,9 @@
+USER_STATUS_ONLINE = "online"
+USER_STATUS_OFFLINE = "offline"
+USER_STATUS_AWAY = "away"
+
+USER_STATUS_CHOICES = [
+    (USER_STATUS_ONLINE, "Online"),
+    (USER_STATUS_OFFLINE, "Offline"),
+    (USER_STATUS_AWAY, "Away"),
+]
