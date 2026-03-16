@@ -36,6 +36,7 @@ def get_or_create_google_user(google_data: dict) -> User:
     email = google_data.get("email")
     name = google_data.get("name") or email.split("@")[0]
     email_verified = google_data.get("email_verified", False)
+    picture_url = google_data.get("picture")
 
     if not email:
         raise ValueError("Google account did not return an email address.")
@@ -50,6 +51,8 @@ def get_or_create_google_user(google_data: dict) -> User:
             user.is_active = True
         if not user.name:
             user.name = name
+        if picture_url and not user.google_picture_url:
+            user.google_picture_url = picture_url
         user.save()
         return user
 
@@ -69,6 +72,7 @@ def get_or_create_google_user(google_data: dict) -> User:
         is_google_account=True,
         is_verified=bool(email_verified),
         is_active=bool(email_verified),
+        google_picture_url=picture_url or "",
     )
     user.set_unusable_password()
     user.save()

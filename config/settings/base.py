@@ -195,16 +195,4 @@ LOGGING = {
     "disable_existing_loggers": False,
 }
 
-GOOGLE_WEB_CLIENT_ID = config("GOOGLE_WEB_CLIENT_ID", default="")
-GOOGLE_ANDROID_CLIENT_ID = config("GOOGLE_ANDROID_CLIENT_ID", default="")
-GOOGLE_IOS_CLIENT_ID = config("GOOGLE_IOS_CLIENT_ID", default="")
-
-APP_BASE_URL = config("APP_BASE_URL", default="http://127.0.0.1:8000")
-
-CHANNEL_LAYERS = {
-    "default": {
-        "BACKEND": "channels.layers.InMemoryChannelLayer",
-    }
-}
-
 APP_BASE_URL = config("APP_BASE_URL", default="http://127.0.0.1:8000")
