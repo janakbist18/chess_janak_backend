@@ -1,6 +1,7 @@
 from django.contrib import admin
 
 from apps.chessplay.models import ChessMatch, ChessMove
+from apps.chessplay.models_ads import RewardAd, UserAdReward, AdViewerSession
 
 
 class ChessMoveInline(admin.TabularInline):
@@ -93,4 +94,102 @@ class ChessMoveAdmin(admin.ModelAdmin):
         "san",
     )
     autocomplete_fields = ("match", "player")
-    readonly_fields = ("created_at", "updated_at")
+
+
+@admin.register(RewardAd)
+class RewardAdAdmin(admin.ModelAdmin):
+    list_display = (
+        "id",
+        "title",
+        "ad_type",
+        "status",
+        "reward_coins",
+        "reward_points",
+        "duration_seconds",
+        "total_impressions",
+        "total_completions",
+        "is_available",
+        "created_at",
+    )
+    list_filter = ("ad_type", "status", "created_at")
+    search_fields = ("title", "description")
+    readonly_fields = (
+        "total_impressions",
+        "total_completions",
+        "total_clicks",
+        "created_at",
+        "updated_at",
+    )
+    fieldsets = (
+        ("Basic Info", {
+            "fields": ("title", "description", "ad_type", "status")
+        }),
+        ("Rewards", {
+            "fields": ("reward_coins", "reward_points")
+        }),
+        ("Ad Settings", {
+            "fields": ("duration_seconds", "impressions_limit", "daily_limit_per_user")
+        }),
+        ("URLs", {
+            "fields": ("ad_url", "thumbnail_url")
+        }),
+        ("Scheduling", {
+            "fields": ("starts_at", "ends_at")
+        }),
+        ("Tracking", {
+            "fields": ("total_impressions", "total_completions", "total_clicks")
+        }),
+        ("Timestamps", {
+            "fields": ("created_at", "updated_at"),
+            "classes": ("collapse",)
+        }),
+    )
+
+
+@admin.register(UserAdReward)
+class UserAdRewardAdmin(admin.ModelAdmin):
+    list_display = (
+        "id",
+        "user",
+        "ad",
+        "viewed_at",
+        "completed",
+        "coins_earned",
+        "points_earned",
+        "clicked",
+    )
+    list_filter = ("completed", "clicked", "viewed_at")
+    search_fields = (
+        "user__email",
+        "user__username",
+        "ad__title",
+    )
+    readonly_fields = (
+        "viewed_at",
+        "completed_at",
+        "coins_earned",
+        "points_earned",
+        "clicked_at",
+    )
+    autocomplete_fields = ("user", "ad")
+
+
+@admin.register(AdViewerSession)
+class AdViewerSessionAdmin(admin.ModelAdmin):
+    list_display = (
+        "id",
+        "user",
+        "ad",
+        "started_at",
+        "ended_at",
+        "watch_duration_seconds",
+        "skipped",
+    )
+    list_filter = ("skipped", "started_at")
+    search_fields = (
+        "user__email",
+        "user__username",
+        "ad__title",
+    )
+    readonly_fields = ("started_at", "ended_at", "skipped_at")
+    autocomplete_fields = ("user", "ad")

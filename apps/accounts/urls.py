@@ -21,7 +21,7 @@ urlpatterns = [
     path("login/", LoginView.as_view(), name="login"),
     path("forgot-password/", ForgotPasswordView.as_view(), name="forgot-password"),
     path("reset-password/", ResetPasswordView.as_view(), name="reset-password"),
-    path("google/", GoogleSignInView.as_view(), name="google-signin"),
+    path("google_signin/", GoogleSignInView.as_view(), name="google-signin"),
     path("me/", MeView.as_view(), name="me"),
     path("token/refresh/", TokenRefreshView.as_view(), name="token-refresh"),
 ]

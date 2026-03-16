@@ -1,0 +1,27 @@
+Chess Janak - OTP Code
+
+Hello!
+
+{% if purpose == "registration" %}
+Welcome to Chess Janak! To complete your registration, please use the following OTP code:
+{% elif purpose == "login" %}
+Someone is trying to access your Chess Janak account. Use this OTP code to login:
+{% elif purpose == "email_verify" %}
+Please verify your email address by using this OTP code:
+{% else %}
+Your requested OTP code is:
+{% endif %}
+
+========================
+OTP CODE: {{ otp_code }}
+========================
+
+VALIDITY: This code will expire in {{ otp_validity_minutes }} minutes.
+
+IMPORTANT: Never share this code with anyone. Our team will never ask you for this code via email or message.
+
+If you didn't request this code, please ignore this email. Your account is safe.
+
+---
+© 2026 Chess Janak. All rights reserved.
+This is an automated email. Please do not reply.

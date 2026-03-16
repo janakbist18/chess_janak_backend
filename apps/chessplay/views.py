@@ -1,11 +1,41 @@
 from rest_framework import permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from django.db.models import Q
 
 from apps.chessplay.selectors import get_match_by_room_id
 from apps.chessplay.serializers import ChessMatchSerializer, ChessMoveSerializer
 from apps.chessplay.services.match_service import get_or_create_match_for_room
 from apps.rooms.models import GameRoom
+
+
+class GamesListView(APIView):
+    """List all games for the current user"""
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        # Get all rooms where user is involved
+        rooms = GameRoom.objects.filter(
+            Q(host=request.user) |
+            Q(player_white=request.user) |
+            Q(player_black=request.user)
+        ).select_related('host', 'player_white', 'player_black')
+
+        games = []
+        for room in rooms:
+            match = get_or_create_match_for_room(room)
+            games.append({
+                "id": room.id,
+                "name": room.name,
+                "host": room.host.email if room.host else None,
+                "player_white": room.player_white.email if room.player_white else None,
+                "player_black": room.player_black.email if room.player_black else None,
+                "status": room.status,
+                "created_at": room.created_at,
+                "match": ChessMatchSerializer(match, context={"request": request}).data,
+            })
+
+        return Response({"games": games}, status=status.HTTP_200_OK)
 
 
 class RoomMatchDetailView(APIView):
