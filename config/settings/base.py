@@ -26,6 +26,8 @@ INSTALLED_APPS = [
     "apps.accounts",
     "apps.rooms",
     "apps.chessplay",
+    "apps.chat.apps.ChatConfig",
+    "apps.calls.apps.CallsConfig",
 ]
 
 MIDDLEWARE = [
@@ -120,6 +122,16 @@ REST_FRAMEWORK = {
     "DEFAULT_PERMISSION_CLASSES": (
         "rest_framework.permissions.AllowAny",
     ),
+    "DEFAULT_RENDERER_CLASSES": (
+        "rest_framework.renderers.JSONRenderer",
+        "rest_framework.renderers.BrowsableAPIRenderer",
+    ),
+    "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
+    "PAGE_SIZE": 100,
+    "DEFAULT_FILTER_BACKENDS": (
+        "rest_framework.filters.SearchFilter",
+        "rest_framework.filters.OrderingFilter",
+    ),
 }
 
 SIMPLE_JWT = {
@@ -137,7 +149,7 @@ SIMPLE_JWT = {
 
 CORS_ALLOWED_ORIGINS = config(
     "CORS_ALLOWED_ORIGINS",
-    default="http://localhost:3000,http://127.0.0.1:3000,http://10.0.2.2:8000",
+    default="http://localhost:3000,http://127.0.0.1:3000,http://localhost:7357,http://127.0.0.1:7357,http://10.0.2.2:8000",
     cast=Csv(),
 )
 
@@ -181,18 +193,6 @@ CHANNEL_LAYERS = {
 LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,
-}
-
-GOOGLE_WEB_CLIENT_ID = config("GOOGLE_WEB_CLIENT_ID", default="")
-GOOGLE_ANDROID_CLIENT_ID = config("GOOGLE_ANDROID_CLIENT_ID", default="")
-GOOGLE_IOS_CLIENT_ID = config("GOOGLE_IOS_CLIENT_ID", default="")
-
-APP_BASE_URL = config("APP_BASE_URL", default="http://127.0.0.1:8000")
-
-CHANNEL_LAYERS = {
-    "default": {
-        "BACKEND": "channels.layers.InMemoryChannelLayer",
-    }
 }
 
 APP_BASE_URL = config("APP_BASE_URL", default="http://127.0.0.1:8000")

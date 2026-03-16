@@ -44,6 +44,7 @@ class UserSerializer(serializers.ModelSerializer):
             "name",
             "profile_image",
             "profile_image_url",
+            "google_picture_url",
             "is_verified",
             "is_google_account",
             "online_status",
@@ -58,7 +59,7 @@ class UserSerializer(serializers.ModelSerializer):
             return request.build_absolute_uri(obj.profile_image.url)
         if obj.profile_image:
             return obj.profile_image.url
-        return None
+        return obj.google_picture_url or None
 
 
 class RegisterSerializer(serializers.Serializer):

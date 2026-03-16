@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+        .header {
+            text-align: center;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #007bff;
+        }
+        .header h1 {
+            color: #007bff;
+            margin: 0;
+        }
+        .content {
+            padding: 20px 0;
+        }
+        .otp-code {
+            text-align: center;
+            font-size: 32px;
+            font-weight: bold;
+            letter-spacing: 5px;
+            color: #007bff;
+            padding: 20px;
+            background-color: #f0f8ff;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        .info {
+            background-color: #fff3cd;
+            padding: 15px;
+            border-left: 4px solid #ffc107;
+            border-radius: 4px;
+            margin: 20px 0;
+        }
+        .footer {
+            text-align: center;
+            padding-top: 20px;
+            border-top: 1px solid #ddd;
+            font-size: 12px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>♟️ Chess Janak</h1>
+        </div>
+
+        <div class="content">
+            <p>Hello!</p>
+
+            <p>
+                {% if purpose == "registration" %}
+                    Welcome to Chess Janak! To complete your registration, please use the following OTP code:
+                {% elif purpose == "login" %}
+                    Someone is trying to access your Chess Janak account. Use this OTP code to login:
+                {% elif purpose == "email_verify" %}
+                    Please verify your email address by using this OTP code:
+                {% else %}
+                    Your requested OTP code is:
+                {% endif %}
+            </p>
+
+            <div class="otp-code">{{ otp_code }}</div>
+
+            <div class="info">
+                <p style="margin: 0;">
+                    <strong>⏰ Validity:</strong> This code will expire in {{ otp_validity_minutes }} minutes.
+                </p>
+            </div>
+
+            <p>
+                <strong>Important:</strong> Never share this code with anyone. Our team will never ask you for this code via email or message.
+            </p>
+
+            <p>
+                If you didn't request this code, please ignore this email. Your account is safe.
+            </p>
+        </div>
+
+        <div class="footer">
+            <p>&copy; 2026 Chess Janak. All rights reserved.</p>
+            <p>This is an automated email. Please do not reply.</p>
+        </div>
+    </div>
+</body>
+</html>

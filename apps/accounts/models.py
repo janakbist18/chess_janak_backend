@@ -28,6 +28,11 @@ class User(AbstractUser):
         null=True,
         blank=True,
     )
+    google_picture_url = models.URLField(
+        max_length=500,
+        null=True,
+        blank=True,
+    )
     is_verified = models.BooleanField(default=False)
     is_google_account = models.BooleanField(default=False)
     online_status = models.CharField(

@@ -14,6 +14,8 @@ def api_root(request):
             "auth_base_url": "/api/auth/",
             "rooms_base_url": "/api/rooms/",
             "chess_base_url": "/api/chess/",
+            "chat_base_url": "/api/chat/",
+            "calls_base_url": "/api/calls/",
         }
     )
 
@@ -24,6 +26,8 @@ urlpatterns = [
     path("api/auth/", include("apps.accounts.urls")),
     path("api/rooms/", include("apps.rooms.urls")),
     path("api/chess/", include("apps.chessplay.urls")),
+    path("api/chat/", include("apps.chat.urls")),
+    path("api/calls/", include("apps.calls.urls")),
 ]
 
 if settings.DEBUG:
