@@ -1,9 +1,9 @@
 from django.contrib.auth.password_validation import validate_password
 from rest_framework import serializers
 
-from apps.accounts.models import User, UserProfile
+from apps.accounts.models import User, UserProfile, ThemePreference
 from apps.accounts.services.auth_service import generate_tokens_for_user
-from apps.accounts.services.google_auth_service import handle_google_login
+from apps.accounts.services.google_auth_service import handle_google_login, handle_google_login_with_access_token
 from apps.accounts.services.otp_service import (
     create_email_verification_otp,
     create_password_reset_otp,
@@ -31,8 +31,47 @@ class UserProfileSerializer(serializers.ModelSerializer):
         )
 
 
+class ThemePreferenceSerializer(serializers.ModelSerializer):
+    theme_display = serializers.CharField(source="get_theme_display", read_only=True)
+
+    class Meta:
+        model = ThemePreference
+        fields = (
+            "theme",
+            "theme_display",
+            "created_at",
+            "updated_at",
+        )
+        read_only_fields = ("created_at", "updated_at", "theme_display")
+
+
+class UserBasicSerializer(serializers.ModelSerializer):
+    """Minimal user serializer for nested relationships."""
+    profile_image_url = serializers.SerializerMethodField()
+
+    class Meta:
+        model = User
+        fields = (
+            "id",
+            "username",
+            "name",
+            "profile_image",
+            "profile_image_url",
+            "online_status",
+        )
+
+    def get_profile_image_url(self, obj):
+        request = self.context.get("request")
+        if obj.profile_image and request:
+            return request.build_absolute_uri(obj.profile_image.url)
+        if obj.profile_image:
+            return obj.profile_image.url
+        return None
+
+
 class UserSerializer(serializers.ModelSerializer):
     profile = UserProfileSerializer(read_only=True)
+    theme_preference = ThemePreferenceSerializer(read_only=True)
     profile_image_url = serializers.SerializerMethodField()
 
     class Meta:
@@ -49,6 +88,7 @@ class UserSerializer(serializers.ModelSerializer):
             "online_status",
             "last_seen",
             "profile",
+            "theme_preference",
             "date_joined",
         )
 
@@ -257,15 +297,27 @@ class ResetPasswordSerializer(serializers.Serializer):
 
 
 class GoogleSignInSerializer(serializers.Serializer):
-    id_token = serializers.CharField()
+    id_token = serializers.CharField(required=False, allow_blank=True, default='')
+    access_token = serializers.CharField(required=False, allow_blank=True, default='')
 
     def validate(self, attrs):
-        id_token_value = attrs["id_token"]
+        id_token_value = attrs.get("id_token", '').strip()
+        access_token_value = attrs.get("access_token", '').strip()
+
+        # Check that at least one token is provided
+        if not id_token_value and not access_token_value:
+            raise serializers.ValidationError(
+                "Either 'id_token' or 'access_token' is required."
+            )
 
         try:
-            result = handle_google_login(id_token_value)
+            # Prefer access_token if both are provided
+            if access_token_value:
+                result = handle_google_login_with_access_token(access_token_value)
+            else:
+                result = handle_google_login(id_token_value)
         except Exception as exc:
-            raise serializers.ValidationError({"google": [str(exc)]})
+            raise serializers.ValidationError(f"Google authentication failed: {str(exc)}")
 
         attrs["result"] = result
         return attrs

@@ -2,7 +2,9 @@ from django.utils import timezone
 from rest_framework import generics, permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
+import logging
 
+from apps.accounts.models import ThemePreference
 from apps.accounts.serializers import (
     ForgotPasswordSerializer,
     GoogleSignInSerializer,
@@ -10,10 +12,13 @@ from apps.accounts.serializers import (
     RegisterSerializer,
     ResendRegistrationOTPSerializer,
     ResetPasswordSerializer,
+    ThemePreferenceSerializer,
     UserSerializer,
     VerifyRegistrationOTPSerializer,
 )
 from apps.accounts.services.auth_service import generate_tokens_for_user
+
+logger = logging.getLogger(__name__)
 
 
 class HealthCheckView(APIView):
@@ -134,21 +139,35 @@ class GoogleSignInView(APIView):
     permission_classes = [permissions.AllowAny]
 
     def post(self, request):
-        serializer = GoogleSignInSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        result = serializer.save()
+        try:
+            logger.info(f"Google Sign-In request: {request.data}")
+            serializer = GoogleSignInSerializer(data=request.data)
 
-        user = result["user"]
-        tokens = result["tokens"]
+            if not serializer.is_valid():
+                logger.warning(f"Serializer errors: {serializer.errors}")
+                return Response(
+                    serializer.errors,
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
 
-        return Response(
-            {
-                "message": "Google sign-in successful.",
-                "user": UserSerializer(user, context={"request": request}).data,
-                "tokens": tokens,
-            },
-            status=status.HTTP_200_OK,
-        )
+            result = serializer.save()
+            user = result["user"]
+            tokens = result["tokens"]
+
+            return Response(
+                {
+                    "message": "Google sign-in successful.",
+                    "user": UserSerializer(user, context={"request": request}).data,
+                    "tokens": tokens,
+                },
+                status=status.HTTP_200_OK,
+            )
+        except Exception as e:
+            logger.error(f"Google Sign-In error: {str(e)}", exc_info=True)
+            return Response(
+                {"error": str(e)},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
 
 class MeView(APIView):
@@ -161,3 +180,51 @@ class MeView(APIView):
             },
             status=status.HTTP_200_OK,
         )
+
+
+class ThemePreferenceView(APIView):
+    """Get or update user's theme preference"""
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        """Get user's theme preference"""
+        try:
+            theme_preference = request.user.theme_preference
+        except ThemePreference.DoesNotExist:
+            theme_preference = ThemePreference.objects.create(user=request.user)
+
+        serializer = ThemePreferenceSerializer(theme_preference)
+        return Response(
+            {
+                "message": "Theme preference retrieved successfully.",
+                "theme_preference": serializer.data,
+            },
+            status=status.HTTP_200_OK,
+        )
+
+    def put(self, request):
+        """Update user's theme preference"""
+        try:
+            theme_preference = request.user.theme_preference
+        except ThemePreference.DoesNotExist:
+            theme_preference = ThemePreference.objects.create(user=request.user)
+
+        serializer = ThemePreferenceSerializer(
+            theme_preference,
+            data=request.data,
+            partial=True,
+        )
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+
+        return Response(
+            {
+                "message": "Theme preference updated successfully.",
+                "theme_preference": serializer.data,
+            },
+            status=status.HTTP_200_OK,
+        )
+
+    def patch(self, request):
+        """Partially update user's theme preference"""
+        return self.put(request)

@@ -1,4 +1,5 @@
 from datetime import timedelta
+import uuid
 
 from django.conf import settings
 from django.contrib.auth.models import AbstractUser
@@ -16,19 +17,34 @@ class User(AbstractUser):
     first_name = None
     last_name = None
 
-    email = models.EmailField(unique=True)
+    # Device ID for anonymous user identification
+    device_id = models.CharField(
+        max_length=36,
+        unique=True,
+        db_index=True,
+        default=uuid.uuid4,
+        help_text="Unique device identifier for anonymous users"
+    )
+
+    email = models.EmailField(unique=True, null=True, blank=True)
     username = models.CharField(
         max_length=30,
         unique=True,
+        null=True,
+        blank=True,
         validators=[validate_username_format],
     )
-    name = models.CharField(max_length=150)
+    name = models.CharField(max_length=150, blank=True, default="")
     profile_image = models.ImageField(
         upload_to="profiles/",
         null=True,
         blank=True,
     )
     is_verified = models.BooleanField(default=False)
+    is_anonymous = models.BooleanField(
+        default=True,
+        help_text="True for device-based anonymous users, False for authenticated users"
+    )
     is_google_account = models.BooleanField(default=False)
     online_status = models.CharField(
         max_length=20,
@@ -38,15 +54,21 @@ class User(AbstractUser):
     last_seen = models.DateTimeField(null=True, blank=True)
 
     EMAIL_FIELD = "email"
-    USERNAME_FIELD = "email"
-    REQUIRED_FIELDS = ["username", "name"]
+    USERNAME_FIELD = "device_id"  # Use device_id as primary identifier
+    REQUIRED_FIELDS = []
 
     objects = UserManager()
 
     class Meta:
         ordering = ["-date_joined"]
+        indexes = [
+            models.Index(fields=["device_id"]),
+            models.Index(fields=["is_anonymous"]),
+        ]
 
     def __str__(self) -> str:
+        if self.is_anonymous:
+            return f"Anonymous ({self.device_id[:8]})"
         return f"{self.username} ({self.email})"
 
 
@@ -143,3 +165,33 @@ class PasswordResetOTP(TimeStampedModel):
     def mark_used(self) -> None:
         self.is_used = True
         self.save(update_fields=["is_used"])
+
+
+class ThemePreference(TimeStampedModel):
+    THEME_LIGHT = "light"
+    THEME_DARK = "dark"
+    THEME_SYSTEM = "system"
+
+    THEME_CHOICES = [
+        (THEME_LIGHT, "Light Mode"),
+        (THEME_DARK, "Dark Mode"),
+        (THEME_SYSTEM, "System Default"),
+    ]
+
+    user = models.OneToOneField(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="theme_preference",
+    )
+    theme = models.CharField(
+        max_length=10,
+        choices=THEME_CHOICES,
+        default=THEME_SYSTEM,
+    )
+
+    class Meta:
+        verbose_name = "Theme Preference"
+        verbose_name_plural = "Theme Preferences"
+
+    def __str__(self) -> str:
+        return f"{self.user.username} - {self.get_theme_display()}"

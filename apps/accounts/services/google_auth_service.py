@@ -1,3 +1,4 @@
+import requests
 from django.conf import settings
 from google.auth.transport import requests as google_requests
 from google.oauth2 import id_token
@@ -75,8 +76,51 @@ def get_or_create_google_user(google_data: dict) -> User:
     return user
 
 
+def verify_google_access_token(access_token: str) -> dict:
+    """
+    Verify Google access token by fetching user info from Google API
+    """
+    try:
+        response = requests.get(
+            "https://www.googleapis.com/oauth2/v1/userinfo",
+            headers={"Authorization": f"Bearer {access_token}"},
+            timeout=5
+        )
+        response.raise_for_status()
+        user_info = response.json()
+
+        # Verify we have email
+        if not user_info.get("email"):
+            raise ValueError("Google account did not return an email address")
+
+        # Ensure name field exists (use email prefix if not provided)
+        if not user_info.get("name"):
+            user_info["name"] = user_info.get("email", "").split("@")[0]
+
+        # Map verified_email to email_verified for consistency with ID token format
+        if "verified_email" in user_info and "email_verified" not in user_info:
+            user_info["email_verified"] = user_info.get("verified_email", False)
+
+        return user_info
+    except requests.exceptions.RequestException as e:
+        raise ValueError(f"Failed to verify Google access token: {str(e)}")
+
+
 def handle_google_login(id_token_value: str) -> dict:
     google_data = verify_google_id_token(id_token_value)
+    user = get_or_create_google_user(google_data)
+    tokens = generate_tokens_for_user(user)
+    return {
+        "user": user,
+        "tokens": tokens,
+    }
+
+
+def handle_google_login_with_access_token(access_token: str) -> dict:
+    """
+    Handle Google login using access token instead of ID token
+    """
+    google_data = verify_google_access_token(access_token)
     user = get_or_create_google_user(google_data)
     tokens = generate_tokens_for_user(user)
     return {

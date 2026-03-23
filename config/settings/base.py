@@ -26,6 +26,9 @@ INSTALLED_APPS = [
     "apps.accounts",
     "apps.rooms",
     "apps.chessplay",
+    "apps.calls",
+    "apps.chat",
+    "apps.coins",
 ]
 
 MIDDLEWARE = [
@@ -35,6 +38,7 @@ MIDDLEWARE = [
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "apps.core.device_middleware.DeviceIDMiddleware",  # Device ID based anonymous authentication
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
@@ -114,14 +118,18 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 AUTH_USER_MODEL = "accounts.User"
 
 REST_FRAMEWORK = {
-    "DEFAULT_AUTHENTICATION_CLASSES": (
-        "rest_framework_simplejwt.authentication.JWTAuthentication",
-    ),
+    # Use AllowAny since authentication is now device_id based via middleware
+    "DEFAULT_AUTHENTICATION_CLASSES": (),
     "DEFAULT_PERMISSION_CLASSES": (
         "rest_framework.permissions.AllowAny",
     ),
+    # Optional: Keep JWT for backward compatibility with authenticated endpoints
+    # "DEFAULT_AUTHENTICATION_CLASSES": (
+    #     "rest_framework_simplejwt.authentication.JWTAuthentication",
+    # ),
 }
 
+# JWT config kept for potential future use with authenticated users
 SIMPLE_JWT = {
     "ACCESS_TOKEN_LIFETIME": timedelta(
         minutes=config("ACCESS_TOKEN_LIFETIME_MINUTES", default=60, cast=int)
@@ -174,25 +182,43 @@ GOOGLE_IOS_CLIENT_ID = config("GOOGLE_IOS_CLIENT_ID", default="")
 
 CHANNEL_LAYERS = {
     "default": {
-        "BACKEND": "channels.layers.InMemoryChannelLayer",
-    }
+        "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "CONFIG": {
+            "hosts": [config("REDIS_HOST", default="127.0.0.1:6379")],
+            "expiry": 3600,
+        },
+    },
 }
 
-LOGGING = {
-    "version": 1,
-    "disable_existing_loggers": False,
-}
+# ==================== KHALTI PAYMENT GATEWAY ====================
 
-GOOGLE_WEB_CLIENT_ID = config("GOOGLE_WEB_CLIENT_ID", default="")
-GOOGLE_ANDROID_CLIENT_ID = config("GOOGLE_ANDROID_CLIENT_ID", default="")
-GOOGLE_IOS_CLIENT_ID = config("GOOGLE_IOS_CLIENT_ID", default="")
+# Khalti Payment Gateway Configuration
+KHALTI_SECRET_KEY = config("KHALTI_SECRET_KEY", default="")
+KHALTI_TEST_SECRET_KEY = config("KHALTI_TEST_SECRET_KEY", default="")
+KHALTI_MERCHANT_CODE = config("KHALTI_MERCHANT_CODE", default="CHESS_JANAK")
+KHALTI_TEST_MODE = config("KHALTI_TEST_MODE", default=True, cast=bool)
 
-APP_BASE_URL = config("APP_BASE_URL", default="http://127.0.0.1:8000")
+# Payment configuration
+PAYMENT_TEST_MODE = config("PAYMENT_TEST_MODE", default=True, cast=bool)
+PAYMENT_RETURN_URL_BASE = config("PAYMENT_RETURN_URL_BASE", default="http://localhost:8000")
+PAYMENT_WEBHOOK_SECRET = config("PAYMENT_WEBHOOK_SECRET", default="webhook_secret_change_me")
 
-CHANNEL_LAYERS = {
-    "default": {
-        "BACKEND": "channels.layers.InMemoryChannelLayer",
-    }
-}
+# Stripe Configuration
+import stripe
+import os
+STRIPE_PUBLIC_KEY = os.environ.get("STRIPE_PUBLIC_KEY")
+STRIPE_SECRET_KEY = os.environ.get("STRIPE_SECRET_KEY")
+STRIPE_WEBHOOK_SECRET = os.environ.get("STRIPE_WEBHOOK_SECRET")
+STRIPE_CURRENCY = os.environ.get("STRIPE_CURRENCY", "usd")
+if STRIPE_SECRET_KEY:
+    stripe.api_key = STRIPE_SECRET_KEY
 
-APP_BASE_URL = config("APP_BASE_URL", default="http://127.0.0.1:8000")
+# Stripe Configuration
+import stripe
+import os
+STRIPE_PUBLIC_KEY = os.environ.get('STRIPE_PUBLIC_KEY')
+STRIPE_SECRET_KEY = os.environ.get('STRIPE_SECRET_KEY')
+STRIPE_WEBHOOK_SECRET = os.environ.get('STRIPE_WEBHOOK_SECRET')
+STRIPE_CURRENCY = os.environ.get('STRIPE_CURRENCY', 'usd')
+if STRIPE_SECRET_KEY:
+    stripe.api_key = STRIPE_SECRET_KEY

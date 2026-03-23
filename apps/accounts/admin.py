@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as DjangoUserAdmin
 
-from apps.accounts.models import EmailOTP, PasswordResetOTP, User, UserProfile
+from apps.accounts.models import EmailOTP, PasswordResetOTP, ThemePreference, User, UserProfile
 
 
 @admin.register(User)
@@ -104,3 +104,16 @@ class PasswordResetOTPAdmin(admin.ModelAdmin):
     )
     list_filter = ("is_used",)
     search_fields = ("email", "user__email", "user__username", "otp_code")
+
+
+@admin.register(ThemePreference)
+class ThemePreferenceAdmin(admin.ModelAdmin):
+    list_display = (
+        "id",
+        "user",
+        "theme",
+        "created_at",
+        "updated_at",
+    )
+    list_filter = ("theme",)
+    search_fields = ("user__email", "user__username")
